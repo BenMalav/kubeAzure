@@ -12,36 +12,27 @@ class VaultManager:
         with open('test') as file:
             self.config = json.load(file)
 
-    def vault_authenticate(self, root_token=None) -> None:
+    def vault_authenticate(self) -> None:
 
-        if root_token == None:
-            self.vault_client = hvac.Client(url=self.config['url'], namespace=self.config['ns'], token=root_token)
-        else:
-            self.vault_client = hvac.Client(url=self.config['url'], namespace=self.config['ns'])
+        self.vault_client = hvac.Client(url=self.config['url'], namespace=self.config['ns'])
+
+        self.vault_client.auth_cubbyhole(self.config['wrap_token'])
+
+        #self.vault_client.is_authenticated()
         
-            try:
-                self.vault_client.auth.approle.login(
-                    role_id=self.config['role_id'],
-                    secret_id=self.config['secret_id']
-                )
-            except Exception as err:
-                print(f"Failed authenticating to vault: {err}")
+        # try:
+        #     self.vault_client.auth.approle.login(
+        #         role_id=self.config['role_id'],
+        #         secret_id=self.config['secret_id']
+        #     )
+        # except Exception as err:
+        #     print(f"Failed authenticating to vault: {err}")
 
-        self.vault_client.lookup_token(token=self.config['secret_id'])
+
+        self.vault_client.lookup_token()
 
     def vault_retrieve_credentials(self):
         read_response = self.client.secrets.kv.read_secret_version(path='my-secret-password')
-
-    def create_update_app_role(self) -> None:
-
-        self.vault_client.auth.approle.create_or_update_approle(
-            role_name="azure_app",
-            token_policies=['app_policy'],
-            token_type="service",
-            token_ttl="60m",
-            token_max_ttl="120m",
-            token_num_uses=10
-        )
 
 
 
